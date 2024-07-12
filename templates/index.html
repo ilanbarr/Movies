@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Movie Recommendations{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Movie Recommendations</h1>
+<form action="/recommend" method="post" class="mt-4">
+    <div class="form-group">
+        <label for="movies">Liked Movies:</label>
+        <select id="movies" name="movies" class="form-control" multiple="multiple" style="width: 100%"></select>
+    </div>
+    <button type="submit" class="btn btn-primary">Get Recommendations</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#movies').select2({
+            placeholder: 'Start typing to search for movies',
+            allowClear: true,
+            ajax: {
+                url: '/search_movies',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term // search term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1
+        });
+    });
+</script>
+{% endblock %}

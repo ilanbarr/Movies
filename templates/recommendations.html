@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Recommended Movies</h1>
+<div class="row mt-4">
+    {% for title, poster_url, imdb_id in recommendations %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <a href="https://m.imdb.com/title/tt{{ imdb_id }}/" target="_blank">
+                    {% if poster_url %}
+                        <img src="{{ poster_url }}" class="card-img-top" alt="{{ title }}">
+                    {% else %}
+                        <img src="default_poster.jpg" class="card-img-top" alt="{{ title }}"> <!-- Placeholder image -->
+                    {% endif %}
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ title }}</h5>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

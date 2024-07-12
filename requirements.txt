@@ -1,0 +1,5 @@
+Flask
+pandas
+pickle
+scikit-surprise
+scikit-learn

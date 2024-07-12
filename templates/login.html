@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Movie Recommendations{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Login</h1>
+<form action="/login" method="post" class="mt-4">
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>
+<p class="mt-3">Don't have an account? <a href="/signup">Sign up</a></p>
+{% endblock %}
