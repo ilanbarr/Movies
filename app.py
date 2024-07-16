@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
@@ -44,16 +43,16 @@ with app.app_context():
     db.create_all()
 
 # Load datasets and model
-df_ratings = pd.read_pickle('sampled_ratings.pkl')
-df_genome_scores = pd.read_pickle('filtered_genome.pkl')
-df_movies = pd.read_pickle('movies_2000.pkl')
+df_ratings = pd.read_pickle('ratings_reviews.pkl')
+df_genome_scores = pd.read_pickle('genome_reviews.pkl')
+df_movies = pd.read_pickle('reviewed_movies.pkl')
 df_features = df_genome_scores.pivot(index='movieId', columns='tagId', values='relevance').fillna(0)
 genome_movie_ids = set(df_genome_scores['movieId'].unique())
 
-df_link = pd.read_pickle('links_2000.pkl')
+df_link = pd.read_pickle('links_reviews.pkl')
 df_merged_movies = pd.merge(df_link, df_movies, on='movieId')
 
-with open('svd_model_sampled.pkl', 'rb') as f:
+with open('svd_model_reviews.pkl', 'rb') as f:
     svd = pickle.load(f)
 
 def get_poster_url(tmdb_id):
@@ -182,7 +181,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
+        if user and user.password == password:
             login_user(user)
             return redirect(url_for('index'))
         else:
@@ -200,8 +199,7 @@ def signup():
             flash('Username already taken. Please choose a different one.', 'danger')
             return render_template('signup.html')
         
-        hashed_password = generate_password_hash(password, method='sha256')
-        new_user = User(username=username, password=hashed_password)
+        new_user = User(username=username, password=password)
         db.session.add(new_user)
         db.session.commit()
         flash('Account created successfully! Please log in.')
@@ -227,4 +225,4 @@ def profile():
     return render_template('profile.html', liked_movies=liked_movie_titles, movie_ids=liked_movie_ids)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)

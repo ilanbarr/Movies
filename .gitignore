@@ -9,3 +9,8 @@ sampled_ratings.pkl
 links_2000.pkl
 filtered_genome.pkl
 movies_2000.pkl
+genome_reviews.pkl
+links_reviews.pkl
+svd_model_reviews.pkl
+reviewed_movies.pkl
+ratings_reviews.pkl
