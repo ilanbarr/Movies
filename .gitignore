@@ -4,3 +4,8 @@ ratings.csv
 tags.csv
 genome-tags.csv
 svd_model.pkl
+svd_model_sampled.pkl
+sampled_ratings.pkl
+links_2000.pkl
+filtered_genome.pkl
+movies_2000.pkl

@@ -44,34 +44,40 @@ with app.app_context():
     db.create_all()
 
 # Load datasets and model
-df_ratings = pd.read_csv('ratings.csv')
-df_genome_scores = pd.read_csv('genome-scores.csv')
-df_movies = pd.read_csv('movies.csv')
+df_ratings = pd.read_pickle('sampled_ratings.pkl')
+df_genome_scores = pd.read_pickle('filtered_genome.pkl')
+df_movies = pd.read_pickle('movies_2000.pkl')
 df_features = df_genome_scores.pivot(index='movieId', columns='tagId', values='relevance').fillna(0)
 genome_movie_ids = set(df_genome_scores['movieId'].unique())
 
-df_link = pd.read_csv('links.csv')  
-df_movies = pd.read_csv('movies.csv')
-
+df_link = pd.read_pickle('links_2000.pkl')
 df_merged_movies = pd.merge(df_link, df_movies, on='movieId')
 
-with open('svd_model.pkl', 'rb') as f:
+with open('svd_model_sampled.pkl', 'rb') as f:
     svd = pickle.load(f)
 
 def get_poster_url(tmdb_id):
-    url = f'https://www.themoviedb.org/movie/{int(tmdb_id)}'
+    base_url = 'https://www.themoviedb.org/'
+    endpoints = [f'movie/{int(tmdb_id)}', f'tv/{int(tmdb_id)}']
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
     }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        poster_img = soup.find('img', class_='poster w-full')
-        if poster_img and 'src' in poster_img.attrs:
-            return poster_img['src']
+    
+    for endpoint in endpoints:
+        url = base_url + endpoint
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            poster_img = soup.find('img', class_='poster lazyload')
+            if not poster_img:
+                poster_img = soup.find('img', class_='poster')
+            if poster_img and 'data-src' in poster_img.attrs:
+                return poster_img['data-src']
+            elif poster_img and 'src' in poster_img.attrs:
+                return poster_img['src']
     return None
 
-def hybrid_recommendation(user_id, top_n=10):
+def hybrid_recommendation(user_id, top_n=15):
     user_preferences = Preference.query.filter_by(user_id=user_id).all()
     liked_movie_ids = [pref.movie_id for pref in user_preferences]
     
@@ -103,9 +109,17 @@ def hybrid_recommendation(user_id, top_n=10):
         imdb_id = df_merged_movies[df_merged_movies['movieId'] == mid]['imdbId'].values[0]
         imdb_id_formatted = f"{int(imdb_id):07d}"
         poster_url = get_poster_url(tmdb_id)
-        recommended_movies.append((title, poster_url, imdb_id_formatted))
+        if poster_url:
+            recommended_movies.append((title, poster_url, imdb_id_formatted))
+        if len(recommended_movies) == 10:
+            break
     
     return recommended_movies
+
+@app.after_request
+def add_header(response):
+    response.cache_control.no_store = True
+    return response
 
 @app.route('/')
 def index():
